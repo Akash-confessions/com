@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Welkin Confessions - Submit Packet</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+html, body {
+height: 100vh;
+width: 100vw;
+overflow: hidden;
+display: flex;
+justify-content: center;
+align-items: center;
+background: transparent !important; 
+}
+
+/* CRYSTAL CLEAR DIFFERENT BACKGROUND VIDEO FOR CONFESSIONS PAGE */
+#bgVideo{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:-2;
+}
+
+.overlay{
+position:fixed;
+inset:0;
+background: transparent;
+z-index:-1;
+}
+
+/* MAIN ADAPTIVE SYSTEM ENGINE CONTAINER */
+.confession-app {
+width: 100%;
+max-width: 480px; 
+height: 100vh;
+display: grid;
+grid-template-rows: auto 1fr;
+background: transparent !important;
+position: relative;
+z-index: 1;
+border-left: 1px solid rgba(255, 255, 255, 0.1);
+border-right: 1px solid rgba(255, 255, 255, 0.1);
+transition: max-width 0.3s ease;
+}
+
+/* HEADER LAYER COMPONENT */
+.chat-header-wrapper {
+position: relative;
+z-index: 10;
+background: rgba(0, 0, 0, 0.4); 
+backdrop-filter: blur(10px);
+border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 14px 18px;
+}
+
+.chat-header-title {
+color: #00bfff;
+font-weight: 800;
+font-size: 13px; 
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+
+.settings-icon {
+color: #fff;
+cursor: pointer;
+font-size: 18px;
+padding: 4px;
+transition: transform 0.3s ease;
+display: block;
+}
+
+.settings-icon:hover {
+transform: rotate(45deg);
+}
+
+/* DROPDOWN NAVIGATION MENU */
+.dropdown-menu {
+position: absolute;
+top: 100%;
+right: 15px;
+width: 200px;
+background: rgba(0, 0, 0, 0.95); 
+border: 1px solid rgba(255, 255, 255, 0.15);
+border-radius: 12px;
+display: none; 
+flex-direction: column;
+overflow: hidden;
+box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.dropdown-menu.active {
+display: flex;
+}
+
+.dropdown-menu a {
+color: #fff;
+padding: 12px 16px;
+text-decoration: none;
+font-size: 13px;
+border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.dropdown-menu a:hover {
+background: rgba(0, 191, 255, 0.2);
+color: #00bfff;
+}
+
+/* MAIN SUBMISSION ZONE WORKSPACE */
+.form-content-area {
+overflow-y: auto;
+padding: 30px 20px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+background: transparent !important;
+}
+
+.portal-card {
+background: rgba(13, 15, 18, 0.8);
+backdrop-filter: blur(15px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 16px;
+padding: 24px;
+box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+width: 100%;
+}
+
+.portal-card h2 {
+color: #fff;
+font-size: 16px;
+font-weight: 600;
+margin-bottom: 8px;
+letter-spacing: 0.5px;
+}
+
+/* UPDATED RULES WITH YOUR EXACT REQUESTED NOTE STYLE Parameters */
+.portal-card p.subtitle {
+color: rgba(0, 191, 255, 0.85);
+font-size: 12px;
+margin-bottom: 20px;
+line-height: 1.5;
+font-weight: 500;
+}
+
+.input-wrapper {
+display: flex;
+flex-direction: column;
+gap: 8px;
+margin-bottom: 18px;
+}
+
+textarea {
+width: 100%;
+height: 160px;
+background: rgba(255, 255, 255, 0.07);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+color: #fff;
+padding: 14px;
+font-size: 14px;
+outline: none;
+resize: none;
+transition: border-color 0.2s;
+line-height: 1.5;
+}
+
+textarea:focus {
+border-color: #00bfff;
+}
+
+.meta-counter {
+text-align: right;
+font-size: 11px;
+color: rgba(255, 255, 255, 0.4);
+}
+
+/* TRANSMISSION BUTTON PROTOCOLS */
+.transmit-btn {
+width: 100%;
+background: linear-gradient(90deg, #00bfff, #0066ff);
+color: #fff;
+border: none;
+padding: 14px;
+border-radius: 25px;
+font-weight: 700;
+font-size: 14px;
+cursor: pointer;
+transition: opacity 0.2s;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 8px;
+}
+
+.transmit-btn:hover {
+opacity: 0.9;
+}
+
+.transmit-btn:disabled {
+background: #444;
+color: #888;
+cursor: not-allowed;
+opacity: 0.6;
+}
+
+.rules-note {
+background: rgba(0, 191, 255, 0.06);
+border: 1px solid rgba(0, 191, 255, 0.2);
+border-radius: 10px;
+padding: 10px 14px;
+font-size: 11.5px;
+color: rgba(255,255,255,.7);
+line-height: 1.6;
+margin-bottom: 16px;
+}
+.rules-note b { color: #00bfff; }
+.rules-note a { color: #00bfff; }
+
+/* CONSOLE FEEDBACK NOTIFICATION SYSTEM */
+.status-box {
+margin-top: 15px;
+padding: 10px;
+border-radius: 8px;
+font-size: 12px;
+text-align: center;
+display: none;
+}
+.status-box.success {
+display: block;
+background: rgba(0, 255, 128, 0.15);
+border: 1px solid #00ff80;
+color: #00ff80;
+}
+.status-box.error {
+display: block;
+background: rgba(255, 51, 51, 0.15);
+border: 1px solid #ff3333;
+color: #ff3333;
+}
+
+/* FLOATING MUSIC BUTTON SYSTEM ON CONFESSIONS PAGE */
+.music-btn {
+position: fixed;
+bottom: 40px;
+right: 20px;
+width: 44px;
+height: 44px;
+border: none;
+border-radius: 50%;
+cursor: pointer;
+font-size: 16px;
+background: white;
+box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+z-index: 999;
+display: flex;
+justify-content: center;
+align-items: center;
+transition: transform 0.2s;
+}
+
+.music-btn:active {
+transform: scale(0.9);
+}
+
+/* ==========================================
+   DESKTOP RESPONSIVE CONFIGURATION 
+   ========================================== */
+@media (min-width: 769px) {
+    .confession-app {
+        max-width: 900px; 
+    }
+
+    .settings-icon {
+        display: none !important; 
+    }
+
+    .dropdown-menu {
+        position: static !important;
+        display: flex !important;
+        flex-direction: row !important;
+        width: auto !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    .dropdown-menu a {
+        border-bottom: none !important;
+        padding: 6px 14px !important;
+        font-size: 12px !important;
+        border-radius: 20px;
+    }
+
+    .form-content-area {
+        padding: 40px 60px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<video id="bgVideo" autoplay muted loop playsinline>
+<source src="home-background.mp4" type="video/mp4">
+</video>
+
+<div class="overlay"></div>
+
+<div class="confession-app">
+    
+    <div class="chat-header-wrapper">
+        <div class="chat-header">
+            <div class="chat-header-title">WELKIN CONFESSIONS</div>
+            <i class="fa-solid fa-gear settings-icon" id="settingsToggle"></i>
+            
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="send-confession.html"><i class="fa-solid fa-paper-plane"></i> Send Confession</a>
+                <a href="public-confessions.html"><i class="fa-solid fa-users"></i> Public Confession</a>
+                <a href="home.html"><i class="fa-solid fa-comments"></i> Anonymous Chat</a>
+                <a href="feedback.html"><i class="fa-solid fa-headset"></i> Feedback &amp; Support</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-content-area">
+        <div class="portal-card">
+            <h2>Submit Secret Confession</h2>
+            
+            <p class="subtitle">Your identity remains hidden from the public. Every confession is reviewed securely by the admin team before publication.</p>
+
+            <div class="rules-note">
+                <b>Before you send:</b> Admin takes a few minutes to review each confession. Confessions that violate guidelines will be rejected — repeated rule-breaking or fake reports can lead to a ban. Facing an issue or want to report a fake confession? Visit <a href="feedback.html">Feedback &amp; Support</a>.
+            </div>
+
+            <form id="confessionForm">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="confessionText" 
+                        placeholder="Type your secure confession packet content data here..." 
+                        maxlength="1000" 
+                        required
+                    ></textarea>
+                    <div class="meta-counter" id="charCounter">0 / 1000</div>
+                </div>
+
+                <button type="submit" class="transmit-btn" id="transmitBtn">
+                    <i class="fa-solid fa-satellite-dish"></i> Transmit Confession
+                </button>
+            </form>
+
+            <div class="status-box" id="statusBox"></div>
+        </div>
+    </div>
+
+</div>
+
+<button class="music-btn" onclick="toggleConfessMusic()">🎵</button>
+
+<audio id="confessMusic" src="home-music.mp3" loop></audio>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFZYXN5MJ9WOMBXfCchUWnR9LEfOOzImw",
+    authDomain: "welkin-b3fee.firebaseapp.com",
+    projectId: "welkin-b3fee",
+    storageBucket: "welkin-b3fee.firebasestorage.app",
+    messagingSenderId: "45894924521",
+    appId: "1:45894924521:web:ab81de1a168022ba1d9878"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ── REQUIRE VERIFIED IDENTITY ──
+  const MY_ROLL = localStorage.getItem("welkinRollNumber");
+  const MY_NAME = localStorage.getItem("welkinUsername");
+  if (!MY_ROLL || !MY_NAME) {
+    window.location.href = "index.html";
+  }
+
+  const form = document.getElementById('confessionForm');
+  const txtArea = document.getElementById('confessionText');
+  const counter = document.getElementById('charCounter');
+  const statusBox = document.getElementById('statusBox');
+  const transmitBtn = document.getElementById('transmitBtn');
+
+  txtArea.addEventListener('input', () => {
+      counter.innerText = `${txtArea.value.length} / 1000`;
+  });
+
+  form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = txtArea.value.trim();
+      if (!payload) return;
+
+      transmitBtn.disabled = true;
+      transmitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Uplink...`;
+
+      try {
+          await addDoc(collection(db, "confessions"), {
+              text: payload,
+              status: "pending", 
+              adminCaption: "",
+              rejectionReason: "",
+              name: MY_NAME,
+              rollNumber: MY_ROLL,
+              timestamp: serverTimestamp()
+          });
+
+          displayStatus("Packet cleared successfully. Queued within security moderation layer buffers.", "success");
+          form.reset();
+          counter.innerText = "0 / 1000";
+      } catch (err) {
+          console.error(err);
+          displayStatus("Uplink failed. Network configuration nodes refused remote write validation.", "error");
+      } finally {
+          transmitBtn.disabled = false;
+          transmitBtn.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> Transmit Confession`;
+      }
+  });
+
+  function displayStatus(msg, type) {
+      statusBox.innerText = msg;
+      statusBox.className = `status-box ${type}`;
+      setTimeout(() => { statusBox.className = "status-box"; }, 5000);
+  }
+</script>
+
+<script>
+const settingsToggle = document.getElementById('settingsToggle');
+const dropdownMenu = document.getElementById('dropdownMenu');
+
+settingsToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle('active');
+});
+
+window.addEventListener('click', () => {
+    if (window.innerWidth <= 768 && dropdownMenu.classList.contains('active')) {
+        dropdownMenu.classList.remove('active');
+    }
+});
+
+function toggleConfessMusic(){
+    const music = document.getElementById("confessMusic");
+    if(music.paused){
+        music.play().catch(err => console.log("Audio play deferred: ", err));
+    } else {
+        music.pause();
+    }
+}
+</script>
+
+</body>
+</html>

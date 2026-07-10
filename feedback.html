@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welkin Confessions - Feedback & Support</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+
+html, body {
+  height:100vh; width:100vw; overflow:hidden;
+  display:flex; justify-content:center; align-items:stretch;
+  background:#05070a;
+}
+
+.app {
+  width:100%; max-width:480px; height:100vh;
+  display:flex; flex-direction:column;
+  border-left:1px solid rgba(255,255,255,.1);
+  border-right:1px solid rgba(255,255,255,.1);
+  background:transparent;
+}
+
+.header-wrapper {
+  flex-shrink:0; position:relative; z-index:10;
+  background:rgba(0,0,0,.5); backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 18px;
+}
+.header-title { font-family:'Cormorant Garamond', serif; color:#00bfff; font-weight:700; font-size:16px; letter-spacing:1.2px; text-transform:uppercase; }
+.settings-icon { color:#fff; cursor:pointer; font-size:18px; padding:8px; transition:transform .3s; }
+.settings-icon:hover { transform:rotate(45deg); }
+
+.dropdown-menu {
+  position:absolute; top:100%; right:15px; width:210px;
+  background:rgba(0,0,0,.96); border:1px solid rgba(255,255,255,.15);
+  border-radius:12px; display:none; flex-direction:column; overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.6);
+}
+.dropdown-menu.active { display:flex; }
+.dropdown-menu a {
+  color:#fff; padding:13px 16px; text-decoration:none; font-size:13px;
+  border-bottom:1px solid rgba(255,255,255,.05); display:flex; align-items:center; gap:10px;
+}
+.dropdown-menu a:last-child { border-bottom:none; }
+.dropdown-menu a:hover { background:rgba(0,191,255,.2); color:#00bfff; }
+
+.content {
+  flex:1; overflow-y:auto; padding:20px 16px 100px;
+}
+
+.tabs {
+  display:flex; gap:8px; margin-bottom:18px;
+}
+.tab-btn {
+  flex:1; padding:10px; text-align:center; border-radius:10px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.6); font-size:12.5px; font-weight:600; cursor:pointer;
+}
+.tab-btn.active { background:rgba(0,191,255,.15); border-color:#00bfff; color:#00bfff; }
+
+.panel { display:none; }
+.panel.active { display:block; }
+
+.card {
+  background:rgba(13,15,18,.8); border:1px solid rgba(255,255,255,.1);
+  border-radius:16px; padding:20px; margin-bottom:14px;
+}
+.card h3 { font-family:'Cormorant Garamond', serif; color:#fff; font-size:18px; font-weight:700; margin-bottom:6px; }
+.card p.hint { color:rgba(255,255,255,.5); font-size:11.5px; margin-bottom:14px; line-height:1.5; }
+
+input.ticket-input, textarea.ticket-input {
+  width:100%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; color:#fff; padding:12px 14px; font-size:13.5px; outline:none;
+  margin-bottom:12px; font-family:'Poppins',sans-serif;
+}
+textarea.ticket-input { height:110px; resize:none; }
+input.ticket-input:focus, textarea.ticket-input:focus { border-color:#00bfff; }
+
+select.ticket-input {
+  width:100%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; color:#fff; padding:12px 14px; font-size:13.5px; outline:none;
+  margin-bottom:12px; font-family:'Poppins',sans-serif;
+}
+select.ticket-input option { background:#111; }
+
+.submit-btn {
+  width:100%; padding:13px; border:none; border-radius:25px; cursor:pointer;
+  font-weight:700; font-size:13.5px; color:#fff;
+  background:linear-gradient(90deg,#00bfff,#0066ff);
+}
+.submit-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+.ticket-item {
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer;
+}
+.ticket-item:hover { border-color:rgba(0,191,255,.4); }
+.ticket-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.ticket-subject { color:#fff; font-size:13px; font-weight:600; }
+.ticket-status { font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
+.ticket-status.open { background:rgba(245,158,11,.15); color:#f59e0b; }
+.ticket-status.closed { background:rgba(255,255,255,.08); color:rgba(255,255,255,.5); }
+.ticket-preview { color:rgba(255,255,255,.5); font-size:12px; }
+.ticket-time { color:rgba(255,255,255,.35); font-size:10.5px; margin-top:6px; }
+
+.empty-state { text-align:center; padding:40px 20px; color:rgba(255,255,255,.35); font-size:13px; }
+.empty-state i { font-size:30px; display:block; margin-bottom:10px; opacity:.5; }
+
+/* Thread view */
+#threadView { display:none; }
+#threadView.active { display:block; }
+.thread-back { color:#00bfff; font-size:13px; margin-bottom:14px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+.thread-msgs { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; max-height:calc(100vh - 340px); overflow-y:auto; }
+.thread-msg { max-width:80%; padding:10px 14px; border-radius:12px; font-size:13px; line-height:1.5; }
+.thread-msg.user { align-self:flex-end; background:rgba(35,30,45,.85); border-left:3px solid #a855f7; margin-left:auto; }
+.thread-msg.admin { align-self:flex-start; background:rgba(0,191,255,.1); border-left:3px solid #00bfff; }
+.thread-msg .sender { font-size:10px; font-weight:700; margin-bottom:4px; color:rgba(255,255,255,.5); }
+.reply-row { display:flex; gap:8px; }
+.reply-row input { flex:1; }
+.reply-send { width:44px; border:none; border-radius:10px; background:#00bfff; color:#fff; cursor:pointer; }
+
+/* ── Custom toast (replaces native browser alert()) ── */
+.alert-toast {
+  position:fixed; top:-100px; left:50%;
+  transform:translateX(-50%);
+  background:rgba(20,20,20,0.96);
+  border-left:4px solid #00bfff;
+  padding:14px 22px; border-radius:8px;
+  color:white; font-size:13.5px; font-weight:500;
+  z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  display:flex; align-items:center; gap:10px;
+  transition:top 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  max-width:90vw;
+}
+.alert-toast.show { top:20px; }
+.alert-toast.error { border-left-color:#ff3b30; }
+.alert-toast i { font-size:16px; color:#00bfff; flex-shrink:0; }
+.alert-toast.error i { color:#ff3b30; }
+</style>
+</head>
+<body>
+
+<div class="alert-toast" id="alertToast">
+  <i class="fa-solid fa-circle-info" id="alertIcon"></i>
+  <span id="alertMsg"></span>
+</div>
+
+<div class="app">
+  <div class="header-wrapper">
+    <div class="header">
+      <div class="header-title">Feedback &amp; Support</div>
+      <i class="fa-solid fa-gear settings-icon" id="settingsToggle"></i>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <a href="send-confession.html"><i class="fa-solid fa-paper-plane"></i> Send Confession</a>
+        <a href="public-confessions.html"><i class="fa-solid fa-users"></i> Public Confessions</a>
+        <a href="home.html"><i class="fa-solid fa-comments"></i> Anonymous Chat</a>
+        <a href="feedback.html"><i class="fa-solid fa-headset"></i> Feedback &amp; Support</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tabs">
+      <div class="tab-btn active" id="tabNew" onclick="switchTab('new')">New Ticket</div>
+      <div class="tab-btn" id="tabMine" onclick="switchTab('mine')">My Tickets</div>
+    </div>
+
+    <!-- NEW TICKET PANEL -->
+    <div class="panel active" id="panelNew">
+      <div class="card">
+        <h3>Contact Admin</h3>
+        <p class="hint">Facing an issue, want to report a fake confession, report another user, or send feedback? Submit a ticket and the admin team will reply here.</p>
+        <select class="ticket-input" id="ticketType">
+          <option value="Feedback">General Feedback</option>
+          <option value="Report User">Report a User</option>
+          <option value="Report Confession">Report a Fake Confession</option>
+          <option value="Technical Issue">Technical Issue</option>
+          <option value="Appeal">Ban / Rejection Appeal</option>
+        </select>
+        <input class="ticket-input" id="ticketSubject" placeholder="Short subject" maxlength="80">
+        <textarea class="ticket-input" id="ticketMessage" placeholder="Describe the issue in detail..." maxlength="800"></textarea>
+        <button class="submit-btn" id="submitTicketBtn" onclick="submitTicket()">Send to Admin</button>
+      </div>
+    </div>
+
+    <!-- MY TICKETS PANEL -->
+    <div class="panel" id="panelMine">
+      <div id="ticketsList"></div>
+    </div>
+
+    <!-- THREAD VIEW -->
+    <div id="threadView">
+      <div class="thread-back" onclick="closeThread()"><i class="fa-solid fa-arrow-left"></i> Back to tickets</div>
+      <div class="card">
+        <h3 id="threadSubject">Subject</h3>
+        <p class="hint" id="threadMeta"></p>
+        <div class="thread-msgs" id="threadMsgs"></div>
+        <div class="reply-row">
+          <input class="ticket-input" id="replyInput" placeholder="Type a reply..." style="margin-bottom:0;">
+          <button class="reply-send" onclick="sendReply()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showToast(msg, isError) {
+    document.getElementById("alertMsg").innerText = msg;
+    const icon = document.getElementById("alertIcon");
+    icon.className = isError ? "fa-solid fa-circle-exclamation" : "fa-solid fa-circle-info";
+    const t = document.getElementById("alertToast");
+    t.classList.toggle("error", !!isError);
+    t.classList.add("show");
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+  }
+  window._showToast = showToast;
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, doc, updateDoc,
+    query, where, orderBy, onSnapshot, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFZYXN5MJ9WOMBXfCchUWnR9LEfOOzImw",
+    authDomain: "welkin-b3fee.firebaseapp.com",
+    projectId: "welkin-b3fee",
+    storageBucket: "welkin-b3fee.firebasestorage.app",
+    messagingSenderId: "45894924521",
+    appId: "1:45894924521:web:ab81de1a168022ba1d9878"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  const MY_ROLL = localStorage.getItem("welkinRollNumber");
+  const MY_NAME = localStorage.getItem("welkinUsername");
+  if (!MY_ROLL || !MY_NAME) window.location.href = "index.html";
+
+  function escapeHTML(str) {
+    return String(str||"").replace(/[&<>'"]/g, t => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[t]||t));
+  }
+  function timeAgo(ts) {
+    if (!ts) return "Just now";
+    const diff = Math.floor((Date.now() - ts.toDate().getTime())/1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  }
+
+  window.submitTicket = async function() {
+    const type = document.getElementById("ticketType").value;
+    const subject = document.getElementById("ticketSubject").value.trim();
+    const message = document.getElementById("ticketMessage").value.trim();
+    if (!subject || !message) { window._showToast("Please fill in both subject and message.", true); return; }
+
+    const btn = document.getElementById("submitTicketBtn");
+    btn.disabled = true; btn.innerText = "Sending...";
+    try {
+      const ref = await addDoc(collection(db, "feedback"), {
+        name: MY_NAME, rollNumber: MY_ROLL, type, subject, message,
+        status: "open", createdAt: serverTimestamp(), lastReplyAt: serverTimestamp()
+      });
+      await addDoc(collection(db, "feedback", ref.id, "replies"), {
+        sender: "user", message, timestamp: serverTimestamp()
+      });
+      document.getElementById("ticketSubject").value = "";
+      document.getElementById("ticketMessage").value = "";
+      window._showToast("Ticket sent to admin.", false);
+      switchTab("mine");
+    } catch (e) {
+      console.error(e);
+      window._showToast("Could not send ticket. Please try again.", true);
+    } finally {
+      btn.disabled = false; btn.innerText = "Send to Admin";
+    }
+  };
+
+  let ticketsUnsub = null;
+  function loadMyTickets() {
+    if (ticketsUnsub) return;
+    const list = document.getElementById("ticketsList");
+    const q = query(collection(db, "feedback"), where("rollNumber", "==", MY_ROLL));
+    ticketsUnsub = onSnapshot(q, snap => {
+      if (snap.empty) {
+        list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>No tickets yet. Start one from the "New Ticket" tab.</div>`;
+        return;
+      }
+      const docs = snap.docs.slice().sort((a, b) => {
+        const ta = (a.data().lastReplyAt || a.data().createdAt)?.toMillis?.() || 0;
+        const tb = (b.data().lastReplyAt || b.data().createdAt)?.toMillis?.() || 0;
+        return tb - ta;
+      });
+      list.innerHTML = "";
+      docs.forEach(d => {
+        const t = d.data();
+        const item = document.createElement("div");
+        item.className = "ticket-item";
+        item.innerHTML = `
+          <div class="ticket-top">
+            <span class="ticket-subject">${escapeHTML(t.subject)}</span>
+            <span class="ticket-status ${t.status}">${t.status}</span>
+          </div>
+          <div class="ticket-preview">${escapeHTML(t.type)}</div>
+          <div class="ticket-time">${timeAgo(t.lastReplyAt || t.createdAt)}</div>`;
+        item.addEventListener("click", () => openThread(d.id, t));
+        list.appendChild(item);
+      });
+    }, err => {
+      console.error(err);
+      list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Could not load tickets. Please try again.</div>`;
+      window._showToast("Could not load your tickets. Please try again.", true);
+    });
+  }
+
+  let currentTicketId = null;
+  let replyUnsub = null;
+  window.openThread = function(id, t) {
+    currentTicketId = id;
+    document.getElementById("threadSubject").innerText = t.subject;
+    document.getElementById("threadMeta").innerText = `${t.type} · ${t.status.toUpperCase()}`;
+    document.getElementById("threadView").classList.add("active");
+    document.getElementById("panelMine").style.display = "none";
+
+    if (replyUnsub) replyUnsub();
+    const q = query(collection(db, "feedback", id, "replies"), orderBy("timestamp", "asc"));
+    replyUnsub = onSnapshot(q, snap => {
+      const box = document.getElementById("threadMsgs");
+      box.innerHTML = "";
+      snap.forEach(d => {
+        const r = d.data();
+        const div = document.createElement("div");
+        div.className = "thread-msg " + (r.sender === "admin" ? "admin" : "user");
+        div.innerHTML = `<div class="sender">${r.sender === "admin" ? "WELKIN ADMIN" : "YOU"}</div>${escapeHTML(r.message)}`;
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }, err => {
+      console.error(err);
+      window._showToast("Could not load this ticket's messages.", true);
+    });
+  };
+
+  window.closeThread = function() {
+    document.getElementById("threadView").classList.remove("active");
+    document.getElementById("panelMine").style.display = "block";
+    if (replyUnsub) { replyUnsub(); replyUnsub = null; }
+    currentTicketId = null;
+  };
+
+  window.sendReply = async function() {
+    const input = document.getElementById("replyInput");
+    const text = input.value.trim();
+    if (!text || !currentTicketId) return;
+    input.value = "";
+    try {
+      await addDoc(collection(db, "feedback", currentTicketId, "replies"), {
+        sender: "user", message: text, timestamp: serverTimestamp()
+      });
+      await updateDoc(doc(db, "feedback", currentTicketId), {
+        status: "open", lastReplyAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.error(e);
+      window._showToast("Could not send reply. Please try again.", true);
+    }
+  };
+
+  document.getElementById("replyInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.sendReply();
+  });
+
+  window.switchTab = function(tab) {
+    document.getElementById("panelNew").classList.toggle("active", tab === "new");
+    document.getElementById("panelMine").classList.toggle("active", tab === "mine");
+    document.getElementById("tabNew").classList.toggle("active", tab === "new");
+    document.getElementById("tabMine").classList.toggle("active", tab === "mine");
+    closeThread();
+    if (tab === "mine") loadMyTickets();
+  };
+</script>
+
+<script>
+  const settingsToggle = document.getElementById("settingsToggle");
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  settingsToggle.addEventListener("click", e => { e.stopPropagation(); dropdownMenu.classList.toggle("active"); });
+  window.addEventListener("click", () => dropdownMenu.classList.remove("active"));
+</script>
+
+</body>
+</html>

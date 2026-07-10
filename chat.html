@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Chat</title>
+    <style>
+        :root {
+            --bg-color: rgba(13, 14, 18, 0.4); 
+            --card-bg: rgba(22, 24, 31, 0.85);
+            --accent-color: #7289da;
+            --text-main: #f5f6fa;
+            --text-muted: #d1d5db;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Background Video - Fully Bright & Visible */
+        #bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -2;
+            object-fit: cover;
+        }
+
+        /* Minimal overlay to preserve video clarity */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2); 
+            z-index: -1;
+        }
+
+        /* Top Header - Completely Transparent Background */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            padding: 1.5rem 0;
+            background: transparent; 
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 50;
+            pointer-events: none; 
+        }
+
+        /* Three-Bar Hamburger Menu Button */
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(22, 24, 31, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: rgba(35, 39, 50, 0.9);
+        }
+
+        .menu-btn .bar {
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-main);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        /* Slide-out Sidebar Layout */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px; 
+            width: 280px;
+            height: 100%;
+            background: rgba(16, 18, 23, 0.95);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+            transition: right 0.3s ease;
+            z-index: 90;
+            padding: 80px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            box-sizing: border-box;
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        /* User Identity Block inside Sidebar */
+        .sidebar-identity {
+            font-size: 0.9rem;
+            color: #ff9f43;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding: 14px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .sidebar a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* Messaging Interface Layout */
+        .chat-container {
+            flex: 1;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-color);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 5;
+            padding-top: 80px; 
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        /* Chat Alignment Styles */
+        .message {
+            max-width: 70%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            border-top-left-radius: 2px;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            align-self: flex-start; 
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .message.my-message {
+            border: 1px solid rgba(114, 137, 218, 0.4);
+            background: rgba(28, 31, 41, 0.9);
+        }
+
+        .msg-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .username {
+            font-weight: bold;
+            color: #00b894;
+        }
+        
+        .message.my-message .username {
+            color: #ff9f43; 
+        }
+
+        .timestamp {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        .msg-text {
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            background: rgba(22, 24, 31, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: rgba(13, 14, 18, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            padding: 0.8rem;
+            font-size: 1rem;
+        }
+
+        .chat-input-area input:focus { outline: none; border-color: var(--accent-color); }
+
+        .btn-send {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Audio Control Module Overlay Position */
+        .music-controller {
+            position: fixed;
+            bottom: 85px; 
+            right: 25px;
+            background: #16181f;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+
+        .music-controller:hover { transform: scale(1.1); }
+        .music-controller svg { width: 20px; height: 20px; fill: var(--text-main); }
+        .music-controller.playing svg { fill: #00b894; }
+    </style>
+</head>
+<body>
+
+    <!-- Background Video Wrapper -->
+    <video autoplay muted loop id="bg-video">
+        <source src="home-background.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+
+    <!-- Background Audio Wrapper -->
+    <audio id="bg-music" loop>
+        <source src="home-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Transparent Header Text Section -->
+    <div class="top-header">Anonymous Group chat</div>
+
+    <!-- Top Right Three-Bar Hamburger Menu Trigger -->
+    <div class="menu-btn" id="menuBtn">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <!-- Slide-out Navigation Drawer Configuration -->
+    <div class="sidebar" id="sidebarMenu">
+        <div class="sidebar-identity" id="identityDisplay">Anonymous #----</div>
+        <a href="public.html">Public Confession</a>
+        <a href="send.html">Send Confession</a>
+        <a href="chat.html" class="active">Anonymous Group Chat</a>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatBox">
+            <!-- Feed loads programmatically from database snapshots -->
+        </div>
+
+        <form class="chat-input-area" id="chatForm">
+            <input type="text" id="messageInput" placeholder="Type an anonymous message..." autocomplete="off" required>
+            <button class="btn-send" type="submit">Send</button>
+        </form>
+    </div>
+
+    <!-- Floating Audio Widget -->
+    <div class="music-controller" id="musicBtn" title="Toggle Music">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
+
+    <!-- Firebase SDK Implementation -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+        // Your Welkin App Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFZYXN5MJ9WOMBXfCchUWnR9LEfOOzImw",
+            authDomain: "welkin-b3fee.firebaseapp.com",
+            projectId: "welkin-b3fee",
+            storageBucket: "welkin-b3fee.firebasestorage.app",
+            messagingSenderId: "45894924521",
+            appId: "1:45894924521:web:ab81de1a168022ba1d9878"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const messagesCollection = collection(db, "group_chats");
+
+        // Menu Interface Interaction Handling
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebarMenu.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!sidebarMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+                sidebarMenu.classList.remove('open');
+            }
+        });
+
+        // Set Persistent Browser Client Signatures
+        let myAnonName = localStorage.getItem('anon_name');
+        if (!myAnonName) {
+            const randomID = Math.floor(1000 + Math.random() * 9000); 
+            myAnonName = `Anonymous #${randomID}`;
+            localStorage.setItem('anon_name', myAnonName);
+        }
+        document.getElementById('identityDisplay').innerText = myAnonName;
+
+        // Loopable Background Track System
+        const music = document.getElementById('bg-music');
+        const musicBtn = document.getElementById('musicBtn');
+        
+        musicBtn.addEventListener('click', () => {
+            if (music.paused) {
+                music.play().catch(err => console.log("Audio play execution blocked: ", err));
+                musicBtn.classList.add('playing');
+            } else {
+                music.pause();
+                musicBtn.classList.remove('playing');
+            }
+        });
+
+        // Time processing formatting module
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const seconds = Math.floor((new Date() - date) / 1000);
+
+            if (seconds < 5) return 'Just now';
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        // Live Cloud Firestore Event Synchronization Stream
+        const q = query(messagesCollection, orderBy("createdAt", "asc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = ''; 
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const isMe = data.sender === myAnonName;
+                
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${isMe ? 'my-message' : ''}`;
+
+                msgDiv.innerHTML = `
+                    <div class="msg-meta">
+                        <span class="username">${data.sender}</span>
+                        <span class="timestamp" data-time="${data.createdAt ? data.createdAt.toMillis() : Date.now()}">${formatTimeAgo(data.createdAt)}</span>
+                    </div>
+                    <div class="msg-text">${escapeHTML(data.text)}</div>
+                `;
+                chatBox.appendChild(msgDiv);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        });
+
+        // Message Writing Executions
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = messageInput.value.trim();
+            if (!messageText) return;
+
+            messageInput.value = '';
+
+            try {
+                await addDoc(messagesCollection, {
+                    text: messageText,
+                    sender: myAnonName,
+                    createdAt: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Database submission write fault: ", error);
+            }
+        });
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Updates time labels every 10 seconds
+        setInterval(() => {
+            const timestamps = document.querySelectorAll('.timestamp');
+            timestamps.forEach(span => {
+                const millis = parseInt(span.getAttribute('data-time'));
+                if (millis) {
+                    const fakeTimestamp = { toDate: () => new Date(millis) };
+                    span.innerText = formatTimeAgo(fakeTimestamp);
+                }
+            });
+        }, 10000);
+    </script>
+</body>
+</html>

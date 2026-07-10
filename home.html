@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Welkin Group Chat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+body {
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background: black;
+}
+
+#bgVideo {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: -1;
+}
+
+.chat-app {
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.chat-header-wrapper {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+}
+
+.chat-header-title {
+  color: #00bfff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.settings-icon {
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 8px;
+  transition: transform 0.3s ease;
+}
+
+.settings-icon:hover { transform: rotate(45deg); }
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 15px;
+  width: 210px;
+  background: rgba(0,0,0,0.96);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+.dropdown-menu.active { display: flex; }
+
+.dropdown-menu a {
+  color: #fff;
+  padding: 13px 16px;
+  text-decoration: none;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-menu a:last-child { border-bottom: none; }
+.dropdown-menu a:hover { background: rgba(0,191,255,0.2); color: #00bfff; }
+
+.messages-box {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.messages-box::-webkit-scrollbar { width: 4px; }
+.messages-box::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+}
+
+.message {
+  width: auto;
+  max-width: 85%;
+  min-width: 140px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border-top-left-radius: 2px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  align-self: flex-start;
+  background: rgba(20,22,31,0.78);
+  border-left: 3px solid #00bfff;
+}
+
+.meta-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 4px;
+  gap: 10px;
+}
+
+.username { font-weight: 600; color: #00bcff; }
+.timestamp { color: rgba(255,255,255,0.4); }
+
+.message.my-message {
+  background: rgba(35,30,45,0.85);
+  border-left: 3px solid #a855f7;
+  align-self: flex-end;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 2px;
+}
+
+.message.my-message .username { color: #a855f7; }
+
+/* ── ADMIN MESSAGE BUBBLE ── */
+.message.admin-msg {
+  background: rgba(245,158,11,0.12);
+  border-left: 3px solid #f59e0b;
+  align-self: center;
+  text-align: center;
+  min-width: 200px;
+  max-width: 90%;
+}
+
+.message.admin-msg .username { color: #f59e0b; }
+
+/* ── BAN SCREEN ── */
+#banScreen {
+  position: fixed; inset:0;
+  background: rgba(0,0,0,0.95);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+
+#banScreen.active { display:flex; }
+
+.ban-icon {
+  font-size: 64px;
+  color: #ef4444;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.5; }
+}
+
+#banScreen h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+#banScreen p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+#banScreen .ban-reason {
+  margin-top: 16px;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: #ef4444;
+  font-weight: 600;
+  max-width: 300px;
+}
+
+/* ── ADMIN NOTICE BANNER ── */
+.admin-notice {
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 8px 16px 0;
+  font-size: 12px;
+  color: #f59e0b;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.footer-fixed-wrap {
+  flex-shrink: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.chat-input-area {
+  width: 100%;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-input-area input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  border-radius: 25px;
+  outline: none;
+  font-size: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input-area input:focus { border-color: #00bfff; background: rgba(255,255,255,0.14); }
+.chat-input-area input::placeholder { color: rgba(255,255,255,0.5); }
+.chat-input-area input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.send-btn {
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #00bfff, #0066ff);
+  color: #fff;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.send-btn:active { opacity: 0.8; transform: scale(0.93); }
+.send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.bottom-id-bar {
+  text-align: center;
+  padding: 4px 10px 8px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.bottom-id-bar span { color: #00bfff; font-weight: 700; }
+
+.music-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.music-popup {
+  position: fixed;
+  bottom: 145px;
+  right: 16px;
+  background: rgba(0,0,0,0.96);
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 12px;
+  z-index: 9999;
+  max-width: 250px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.music-popup button {
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #00bfff;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+@media (min-width: 769px) {
+  .chat-app { max-width: 860px; }
+  .settings-icon { display: none !important; }
+  .dropdown-menu {
+    position: static !important;
+    display: flex !important;
+    flex-direction: row !important;
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+  .dropdown-menu a {
+    border-bottom: none !important;
+    padding: 5px 14px !important;
+    font-size: 12px !important;
+    border-radius: 20px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- BAN SCREEN -->
+<div id="banScreen">
+  <div class="ban-icon">🚫</div>
+  <h2>You Have Been Banned</h2>
+  <p>Your access to Welkin Group Chat has been restricted by an administrator.</p>
+  <div class="ban-reason" id="banReasonText">Reason: Violation of community guidelines.</div>
+</div>
+
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="home-background.mp4" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div class="music-popup" id="musicPopup">
+  🎵 Turn on music for a better experience
+  <button onclick="playMusic()">Play</button>
+  <button onclick="closePopup()">✖</button>
+</div>
+
+<div class="chat-app">
+
+  <div class="chat-header-wrapper">
+    <div class="chat-header">
+      <div class="chat-header-title">ANONYMOUS GROUP CHAT</div>
+      <i class="fa-solid fa-gear settings-icon" id="settingsToggle"></i>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <a href="send-confession.html"><i class="fa-solid fa-paper-plane"></i> Send Confession</a>
+        <a href="public-confessions.html"><i class="fa-solid fa-users"></i> Public Confessions</a>
+        <a href="home.html"><i class="fa-solid fa-comments"></i> Anonymous Chat</a>
+        <a href="feedback.html"><i class="fa-solid fa-headset"></i> Feedback &amp; Support</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin notice banner (shown when admin sends you a message) -->
+  <div class="admin-notice" id="adminNotice" style="display:none;">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span id="adminNoticeText"></span>
+  </div>
+
+  <div class="messages-box" id="messagesBox">
+    <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-top:20px;">
+      Loading messages...
+    </div>
+  </div>
+
+  <div class="footer-fixed-wrap">
+    <div class="chat-input-area">
+      <input type="text" id="messageInput" placeholder="Type an anonymous message..." autocomplete="off" inputmode="text">
+      <button class="send-btn" id="sendBtn" aria-label="Send">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+    <div class="bottom-id-bar">
+      Your Anonymous ID: <span id="clientAnonymousId">#----</span>
+    </div>
+  </div>
+
+</div>
+
+<button class="music-btn" onclick="toggleMusic()">🎵</button>
+<audio id="music" src="home-music.mp3" loop></audio>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc,
+    query, orderBy, limit, onSnapshot,
+    serverTimestamp, doc, getDoc, where, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // ── REQUIRE VERIFIED IDENTITY ──
+  const MY_ROLL = localStorage.getItem("welkinRollNumber");
+  const MY_NAME = localStorage.getItem("welkinUsername");
+  if (!MY_ROLL || !MY_NAME) {
+    window.location.href = "index.html";
+  }
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFZYXN5MJ9WOMBXfCchUWnR9LEfOOzImw",
+    authDomain: "welkin-b3fee.firebaseapp.com",
+    projectId: "welkin-b3fee",
+    storageBucket: "welkin-b3fee.firebasestorage.app",
+    messagingSenderId: "45894924521",
+    appId: "1:45894924521:web:ab81de1a168022ba1d9878"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // ── Anonymous ID (persistent)
+  let USER_ID = localStorage.getItem("anonymousUserId");
+  if (!USER_ID) {
+    USER_ID = "#" + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem("anonymousUserId", USER_ID);
+  }
+  document.getElementById("clientAnonymousId").innerText = USER_ID;
+
+  const inputField  = document.getElementById("messageInput");
+  const sendBtn     = document.getElementById("sendBtn");
+  const messagesBox = document.getElementById("messagesBox");
+
+  function escapeHTML(str) {
+    return String(str||"").replace(/[&<>'"]/g,
+      t => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[t] || t));
+  }
+
+  // ── LOG VISITOR
+  async function logVisitor() {
+    try {
+      const ua = navigator.userAgent;
+      let browser = "Unknown";
+      if (ua.includes("Chrome") && !ua.includes("Edg"))   browser = "Chrome";
+      else if (ua.includes("Firefox"))                      browser = "Firefox";
+      else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+      else if (ua.includes("Edg"))                          browser = "Edge";
+      else if (ua.includes("OPR") || ua.includes("Opera")) browser = "Opera";
+
+      let device = "Desktop";
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) device = "Mobile";
+      else if (/iPad|Tablet/i.test(ua)) device = "Tablet";
+
+      await addDoc(collection(db, "visitor_logs"), {
+        anonymousId: USER_ID,
+        browser,
+        device,
+        name: MY_NAME,
+        rollNumber: MY_ROLL,
+        userAgent: ua,
+        visitedAt: serverTimestamp()
+      });
+    } catch(e) { /* silent */ }
+  }
+
+  // ── CHECK IF BANNED OR NOT APPROVED (roll-number based)
+  async function checkBan() {
+    try {
+      const userSnap = await getDoc(doc(db, "users", MY_ROLL));
+      if (!userSnap.exists() || userSnap.data().status !== "approved") {
+        window.location.href = "index.html";
+        return true;
+      }
+      const data = userSnap.data();
+      if (data.status === "banned") {
+        const bs = document.getElementById("banScreen");
+        const br = document.getElementById("banReasonText");
+        br.textContent = "Reason: " + (data.banReason || "Violation of community guidelines.");
+        bs.classList.add("active");
+        inputField.disabled = true;
+        sendBtn.disabled    = true;
+        return true;
+      }
+    } catch(e) { /* silent */ }
+    return false;
+  }
+
+  // ── CHECK FOR ADMIN MESSAGES TO THIS USER'S ROLL NUMBER
+  function listenAdminMessages() {
+    if (!MY_ROLL) return;
+    const q = query(
+      collection(db, "admin_messages"),
+      where("rollNumber", "==", MY_ROLL),
+      orderBy("sentAt", "desc"),
+      limit(1)
+    );
+    onSnapshot(q, snap => {
+      if (!snap.empty) {
+        const msg = snap.docs[0].data();
+        const noticeEl   = document.getElementById("adminNotice");
+        const noticeText = document.getElementById("adminNoticeText");
+        const typeLabel  = msg.type === "warning" ? "⚠️ Admin Warning" : msg.type === "banned" ? "🚫 Ban Notice" : "ℹ️ Admin Notice";
+        noticeText.textContent = `${typeLabel}: ${msg.message}`;
+        noticeEl.style.display = "flex";
+        // Auto-hide info messages after 10s
+        if (msg.type === "info") setTimeout(() => noticeEl.style.display="none", 10000);
+      }
+    });
+  }
+
+  // ── LIVE MESSAGES
+  const chatQuery = query(collection(db, "group_chat"), orderBy("timestamp","asc"), limit(100));
+  onSnapshot(chatQuery, (snapshot) => {
+    messagesBox.innerHTML = "";
+    snapshot.forEach((docSnap) => {
+      const d = docSnap.data();
+      const div = document.createElement("div");
+      const t = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : "Just now";
+      if (d.isAdmin) {
+        div.className = "message admin-msg";
+        div.innerHTML = `
+          <div class="meta-info" style="justify-content:center;">
+            <span class="username"><i class="fa-solid fa-shield-halved"></i> WELKIN ADMIN</span>
+            <span class="timestamp">${t}</span>
+          </div>
+          <p>${escapeHTML(d.text)}</p>`;
+      } else {
+        div.className = d.userId === USER_ID ? "message my-message" : "message";
+        div.innerHTML = `
+          <div class="meta-info">
+            <span class="username">Anon ${escapeHTML(d.userId || "")}</span>
+            <span class="timestamp">${t}</span>
+          </div>
+          <p>${escapeHTML(d.text)}</p>`;
+      }
+      messagesBox.appendChild(div);
+    });
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  });
+
+  // ── ALSO LISTEN FOR REAL-TIME BAN (if admin bans during session)
+  if (MY_ROLL) {
+    onSnapshot(doc(db, "users", MY_ROLL), (snap) => {
+      if (snap.exists() && snap.data().status === "banned") {
+        const data = snap.data();
+        const bs = document.getElementById("banScreen");
+        const br = document.getElementById("banReasonText");
+        br.textContent = "Reason: " + (data.banReason || "Violation of community guidelines.");
+        bs.classList.add("active");
+        inputField.disabled = true;
+        sendBtn.disabled    = true;
+      }
+    });
+  }
+
+  // ── SEND MESSAGE
+  async function sendMessage() {
+    const text = inputField.value.trim();
+    if (!text || inputField.disabled) return;
+    inputField.value = "";
+    try {
+      await addDoc(collection(db, "group_chat"), {
+        user: `Anonymous ${USER_ID}`,
+        userId: USER_ID,
+        text: text,
+        timestamp: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Send error:", e);
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+
+  inputField.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  inputField.addEventListener("focus", () => {
+    setTimeout(() => { messagesBox.scrollTop = messagesBox.scrollHeight; }, 400);
+  });
+
+  // ── INIT
+  (async () => {
+    const banned = await checkBan();
+    if (!banned) {
+      logVisitor();
+      listenAdminMessages();
+    }
+  })();
+</script>
+
+<script>
+const settingsToggle = document.getElementById("settingsToggle");
+const dropdownMenu   = document.getElementById("dropdownMenu");
+
+settingsToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  dropdownMenu.classList.toggle("active");
+});
+
+window.addEventListener("click", () => {
+  if (window.innerWidth <= 768) dropdownMenu.classList.remove("active");
+});
+
+function toggleMusic() {
+  const m = document.getElementById("music");
+  m.paused ? m.play() : m.pause();
+}
+function playMusic() {
+  document.getElementById("music").play();
+  document.getElementById("musicPopup").style.display = "none";
+}
+function closePopup() {
+  document.getElementById("musicPopup").style.display = "none";
+}
+</script>
+
+</body>
+</html>
