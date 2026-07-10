@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welkin Admin Panel</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+
+body {
+  min-height:100vh; background:#05070a; color:#fff;
+}
+
+/* ── LOGIN GATE ── */
+#authGate {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 50% 20%, #0a1622 0%, #05070a 70%);
+}
+.auth-card {
+  width:340px; max-width:90vw; padding:32px;
+  background:rgba(15,17,22,.9); border:1px solid rgba(255,255,255,.1);
+  border-radius:16px; text-align:center;
+}
+.auth-card .badge {
+  width:60px; height:60px; border-radius:50%; margin:0 auto 16px;
+  background:rgba(0,191,255,.12); border:1px solid rgba(0,191,255,.3);
+  display:flex; align-items:center; justify-content:center; font-size:24px; color:#00bfff;
+}
+.auth-card h2 { font-size:18px; margin-bottom:6px; }
+.auth-card p { font-size:12px; color:rgba(255,255,255,.5); margin-bottom:22px; }
+.auth-input {
+  width:100%; padding:12px 14px; margin-bottom:12px; border-radius:10px;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  color:#fff; font-size:14px; outline:none;
+}
+.auth-input:focus { border-color:#00bfff; }
+.auth-btn {
+  width:100%; padding:13px; border:none; border-radius:10px; cursor:pointer;
+  font-weight:700; font-size:14px; color:#fff;
+  background:linear-gradient(90deg,#00bfff,#0066ff);
+}
+.auth-btn:disabled { opacity:.6; cursor:not-allowed; }
+.auth-error {
+  margin-top:12px; font-size:12px; color:#ef4444; display:none;
+}
+
+/* ── ADMIN APP ── */
+#adminApp { display:none; }
+#adminApp.active { display:block; }
+
+.topbar {
+  position:sticky; top:0; z-index:50;
+  background:rgba(10,12,16,.9); backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
+}
+.topbar .brand { color:#00bfff; font-weight:800; font-size:15px; letter-spacing:.5px; }
+.topbar .brand i { margin-right:8px; }
+.logout-btn {
+  background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3); color:#ef4444;
+  padding:8px 16px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600;
+}
+
+.container { max-width:1100px; margin:0 auto; padding:20px; }
+
+/* Stats grid */
+.stats-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px; margin-bottom:22px;
+}
+.stat-card {
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; padding:16px;
+}
+.stat-card .num { font-size:24px; font-weight:800; color:#00bfff; }
+.stat-card .label { font-size:11px; color:rgba(255,255,255,.5); margin-top:4px; text-transform:uppercase; letter-spacing:.5px; }
+
+/* Tabs */
+.tabbar {
+  display:flex; gap:6px; overflow-x:auto; margin-bottom:18px; padding-bottom:4px;
+}
+.tabbar::-webkit-scrollbar { height:3px; }
+.tab {
+  flex-shrink:0; padding:9px 16px; border-radius:20px; font-size:12.5px; font-weight:600;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.6); cursor:pointer; white-space:nowrap;
+}
+.tab.active { background:rgba(0,191,255,.15); border-color:#00bfff; color:#00bfff; }
+
+.section { display:none; }
+.section.active { display:block; }
+
+.panel-card {
+  background:rgba(13,15,18,.7); border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; padding:18px; margin-bottom:16px;
+}
+.panel-card h3 { font-size:14px; margin-bottom:14px; color:#fff; display:flex; align-items:center; gap:8px; }
+.panel-card h3 i { color:#00bfff; }
+
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+th { text-align:left; color:rgba(255,255,255,.4); font-weight:600; padding:8px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid rgba(255,255,255,.08); }
+td { padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+.table-wrap { overflow-x:auto; }
+
+.pill { font-size:10px; padding:3px 9px; border-radius:20px; font-weight:700; text-transform:uppercase; display:inline-block; }
+.pill.pending { background:rgba(245,158,11,.15); color:#f59e0b; }
+.pill.approved { background:rgba(34,197,94,.15); color:#22c55e; }
+.pill.rejected { background:rgba(239,68,68,.15); color:#ef4444; }
+.pill.banned { background:rgba(239,68,68,.2); color:#ef4444; }
+.pill.open { background:rgba(245,158,11,.15); color:#f59e0b; }
+.pill.closed { background:rgba(255,255,255,.08); color:rgba(255,255,255,.5); }
+
+.btn-sm {
+  padding:6px 12px; border-radius:8px; font-size:11.5px; font-weight:600; cursor:pointer; border:none; margin-right:5px;
+}
+.btn-approve { background:rgba(34,197,94,.15); color:#22c55e; border:1px solid rgba(34,197,94,.3); }
+.btn-reject  { background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.3); }
+.btn-ban     { background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.3); }
+.btn-unban   { background:rgba(0,191,255,.15); color:#00bfff; border:1px solid rgba(0,191,255,.3); }
+.btn-view    { background:rgba(255,255,255,.08); color:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.15); }
+
+.empty-row td { text-align:center; color:rgba(255,255,255,.35); padding:24px; }
+
+.text-cell { max-width:260px; word-wrap:break-word; white-space:normal; }
+
+textarea.mini-input, input.mini-input {
+  width:100%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  border-radius:8px; color:#fff; padding:9px 12px; font-size:12.5px; outline:none; font-family:'Poppins',sans-serif;
+}
+textarea.mini-input { height:70px; resize:none; }
+
+.broadcast-row { display:flex; gap:10px; }
+.broadcast-row input { flex:1; }
+.broadcast-row button {
+  padding:0 20px; border:none; border-radius:8px; background:linear-gradient(90deg,#00bfff,#0066ff);
+  color:#fff; font-weight:700; cursor:pointer; font-size:12.5px;
+}
+
+/* Ticket thread */
+.ticket-thread { display:none; }
+.ticket-thread.active { display:block; }
+.thread-msgs { display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; margin-bottom:12px; }
+.thread-msg { max-width:75%; padding:9px 13px; border-radius:10px; font-size:12.5px; line-height:1.5; }
+.thread-msg.user { background:rgba(35,30,45,.7); border-left:3px solid #a855f7; align-self:flex-start; }
+.thread-msg.admin { background:rgba(0,191,255,.1); border-left:3px solid #00bfff; align-self:flex-end; margin-left:auto; }
+.thread-msg .sender { font-size:9.5px; font-weight:700; color:rgba(255,255,255,.45); margin-bottom:3px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ AUTH GATE ═══════════ -->
+<div id="authGate">
+  <div class="auth-card">
+    <div class="badge"><i class="fa-solid fa-user-shield"></i></div>
+    <h2>Welkin Admin</h2>
+    <p>Sign in with your admin email and password to continue.</p>
+    <input type="email" class="auth-input" id="adminEmail" placeholder="Admin Email" autocomplete="username">
+    <input type="password" class="auth-input" id="adminPassword" placeholder="Password" autocomplete="current-password">
+    <button class="auth-btn" id="authBtn">Sign In</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN APP ═══════════ -->
+<div id="adminApp">
+  <div class="topbar">
+    <div class="brand"><i class="fa-solid fa-shield-halved"></i>WELKIN ADMIN PANEL</div>
+    <button class="logout-btn" id="logoutBtn">Log Out</button>
+  </div>
+
+  <div class="container">
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="num" id="statPending">–</div><div class="label">Pending Approvals</div></div>
+      <div class="stat-card"><div class="num" id="statApproved">–</div><div class="label">Approved Users</div></div>
+      <div class="stat-card"><div class="num" id="statBanned">–</div><div class="label">Banned Users</div></div>
+      <div class="stat-card"><div class="num" id="statConfPending">–</div><div class="label">Confessions Pending</div></div>
+      <div class="stat-card"><div class="num" id="statVisitors">–</div><div class="label">Total Visitors</div></div>
+      <div class="stat-card"><div class="num" id="statTickets">–</div><div class="label">Open Tickets</div></div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab active" data-tab="pending" onclick="switchTab('pending')">Pending Approvals</div>
+      <div class="tab" data-tab="approved" onclick="switchTab('approved')">Approved Users</div>
+      <div class="tab" data-tab="banned" onclick="switchTab('banned')">Banned Users</div>
+      <div class="tab" data-tab="confessions" onclick="switchTab('confessions')">Confessions</div>
+      <div class="tab" data-tab="visitors" onclick="switchTab('visitors')">Visitor Logs</div>
+      <div class="tab" data-tab="broadcast" onclick="switchTab('broadcast')">Public Chat</div>
+      <div class="tab" data-tab="tickets" onclick="switchTab('tickets')">Feedback Tickets</div>
+    </div>
+
+    <!-- PENDING APPROVALS -->
+    <div class="section active" id="section-pending">
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-hourglass-half"></i>Pending Verification Requests</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>password</th><th>Device</th><th>OS / Browser</th><th>Submitted</th><th>Attempts</th><th>Action</th></tr></thead>
+            <tbody id="pendingTableBody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPROVED USERS -->
+    <div class="section" id="section-approved">
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-user-check"></i>Approved Users</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>password</th><th>Device</th><th>Approved</th><th>Action</th></tr></thead>
+            <tbody id="approvedTableBody"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNED USERS -->
+    <div class="section" id="section-banned">
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-ban"></i>Banned Users</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>password</th><th>Reason</th><th>Action</th></tr></thead>
+            <tbody id="bannedTableBody"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFESSIONS -->
+    <div class="section" id="section-confessions">
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-satellite-dish"></i>Pending Confessions</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Confession</th><th>Submitted By</th><th>Time</th><th>Action</th></tr></thead>
+            <tbody id="confPendingTableBody"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i>Recently Moderated</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Confession</th><th>Status</th><th>Note</th><th>Time</th></tr></thead>
+            <tbody id="confHistoryTableBody"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISITOR LOGS -->
+    <div class="section" id="section-visitors">
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-eye"></i>Recent Visitors</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>password</th><th>Device</th><th>Browser</th><th>Time</th></tr></thead>
+            <tbody id="visitorsTableBody"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="section" id="section-broadcast">
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-bullhorn"></i>Send Admin Message to Public Chat</h3>
+        <p style="font-size:11.5px;color:rgba(255,255,255,.5);margin-bottom:12px;">This message appears centered and highlighted for everyone in the anonymous group chat.</p>
+        <div class="broadcast-row">
+          <input type="text" class="mini-input" id="broadcastInput" placeholder="Type your admin announcement...">
+          <button onclick="sendBroadcast()">Send</button>
+        </div>
+      </div>
+      <div class="panel-card">
+        <h3><i class="fa-solid fa-comments"></i>Live Chat Feed</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Message</th><th>Time</th></tr></thead>
+            <tbody id="chatFeedTableBody"><tr class="empty-row"><td colspan="3">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="section" id="section-tickets">
+      <div class="panel-card" id="ticketsListCard">
+        <h3><i class="fa-solid fa-headset"></i>Feedback &amp; Support Tickets</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Subject</th><th>Type</th><th>From</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+            <tbody id="ticketsTableBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel-card ticket-thread" id="ticketThreadCard">
+        <h3><i class="fa-solid fa-comment-dots"></i><span id="threadTitle">Ticket</span></h3>
+        <p style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:10px;" id="threadSubtitle"></p>
+        <div class="thread-msgs" id="threadMsgs"></div>
+        <div class="broadcast-row" style="margin-bottom:10px;">
+          <input type="text" class="mini-input" id="ticketReplyInput" placeholder="Reply to user...">
+          <button onclick="sendTicketReply()">Send</button>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-sm btn-view" onclick="closeTicketThread()">Back to List</button>
+          <button class="btn-sm btn-reject" id="closeTicketBtn" onclick="closeTicket()">Close Ticket</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, updateDoc, deleteDoc,
+    query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, where
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFZYXN5MJ9WOMBXfCchUWnR9LEfOOzImw",
+    authDomain: "welkin-b3fee.firebaseapp.com",
+    projectId: "welkin-b3fee",
+    storageBucket: "welkin-b3fee.firebasestorage.app",
+    messagingSenderId: "45894924521",
+    appId: "1:45894924521:web:ab81de1a168022ba1d9878"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  function escapeHTML(str) {
+    return String(str||"").replace(/[&<>'"]/g, t => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[t]||t));
+  }
+  function fmtTime(ts) {
+    if (!ts) return "—";
+    return new Date(ts.toDate()).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  /* ══════════ AUTH ══════════ */
+  const authBtn   = document.getElementById("authBtn");
+  const authError = document.getElementById("authError");
+
+  authBtn.addEventListener("click", async () => {
+    const email = document.getElementById("adminEmail").value.trim();
+    const pass  = document.getElementById("adminPassword").value;
+    if (!email || !pass) {
+      authError.textContent = "Enter both email and password.";
+      authError.style.display = "block";
+      return;
+    }
+    authBtn.disabled = true; authBtn.innerText = "Signing in...";
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      authError.textContent = "Invalid credentials or admin account not set up.";
+      authError.style.display = "block";
+    } finally {
+      authBtn.disabled = false; authBtn.innerText = "Sign In";
+    }
+  });
+
+  document.getElementById("adminPassword").addEventListener("keydown", e => {
+    if (e.key === "Enter") authBtn.click();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
+
+  let listenersStarted = false;
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("authGate").style.display = "none";
+      document.getElementById("adminApp").classList.add("active");
+      if (!listenersStarted) { startAllListeners(); listenersStarted = true; }
+    } else {
+      document.getElementById("authGate").style.display = "flex";
+      document.getElementById("adminApp").classList.remove("active");
+    }
+  });
+
+  /* ══════════ TAB SWITCHING ══════════ */
+  window.switchTab = function(tab) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === "section-" + tab));
+  };
+
+  /* ══════════ USERS (approval / ban) ══════════ */
+  function startUsersListener() {
+    onSnapshot(collection(db, "users"), (snap) => {
+      const pending = [], approved = [], banned = [];
+      snap.forEach(d => {
+        const u = { id: d.id, ...d.data() };
+        if (u.status === "pending") pending.push(u);
+        else if (u.status === "approved") approved.push(u);
+        else if (u.status === "banned") banned.push(u);
+      });
+
+      document.getElementById("statPending").innerText = pending.length;
+      document.getElementById("statApproved").innerText = approved.length;
+      document.getElementById("statBanned").innerText = banned.length;
+
+      // Pending table
+      const pBody = document.getElementById("pendingTableBody");
+      pBody.innerHTML = pending.length ? "" : `<tr class="empty-row"><td colspan="7">No pending requests.</td></tr>`;
+      pending.sort((a,b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0));
+      pending.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHTML(u.name)}</td>
+          <td>${escapeHTML(u.rollNumber)}</td>
+          <td>${escapeHTML(u.device||"—")}</td>
+          <td>${escapeHTML(u.os||"—")} / ${escapeHTML(u.browser||"—")}</td>
+          <td>${fmtTime(u.submittedAt)}</td>
+          <td>${u.attempts||1}</td>
+          <td>
+            <button class="btn-sm btn-approve" data-roll="${u.rollNumber}" data-act="approve">Approve</button>
+            <button class="btn-sm btn-reject" data-roll="${u.rollNumber}" data-act="reject">Reject</button>
+          </td>`;
+        pBody.appendChild(tr);
+      });
+
+      // Approved table
+      const aBody = document.getElementById("approvedTableBody");
+      aBody.innerHTML = approved.length ? "" : `<tr class="empty-row"><td colspan="5">No approved users yet.</td></tr>`;
+      approved.sort((a,b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0));
+      approved.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHTML(u.name)}</td>
+          <td>${escapeHTML(u.rollNumber)}</td>
+          <td>${escapeHTML(u.device||"—")}</td>
+          <td>${fmtTime(u.approvedAt||u.submittedAt)}</td>
+          <td><button class="btn-sm btn-ban" data-roll="${u.rollNumber}" data-act="ban">Ban</button></td>`;
+        aBody.appendChild(tr);
+      });
+
+      // Banned table
+      const bBody = document.getElementById("bannedTableBody");
+      bBody.innerHTML = banned.length ? "" : `<tr class="empty-row"><td colspan="4">No banned users.</td></tr>`;
+      banned.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHTML(u.name)}</td>
+          <td>${escapeHTML(u.rollNumber)}</td>
+          <td class="text-cell">${escapeHTML(u.banReason||"—")}</td>
+          <td><button class="btn-sm btn-unban" data-roll="${u.rollNumber}" data-act="unban">Unban</button></td>`;
+        bBody.appendChild(tr);
+      });
+    });
+  }
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    const roll = btn.dataset.roll;
+    const act  = btn.dataset.act;
+    const ref  = doc(db, "users", roll);
+
+    if (act === "approve") {
+      await updateDoc(ref, { status: "approved", approvedAt: serverTimestamp(), rejectionReason: "" });
+    } else if (act === "reject") {
+      const reason = prompt("Why is this request being rejected? (shown to the user)");
+      if (reason === null) return;
+      await updateDoc(ref, { status: "rejected", rejectionReason: reason || "Details could not be verified." });
+    } else if (act === "ban") {
+      const reason = prompt("Reason for banning this user? (shown to them)");
+      if (reason === null) return;
+      await updateDoc(ref, { status: "banned", banReason: reason || "Violation of community guidelines." });
+    } else if (act === "unban") {
+      await updateDoc(ref, { status: "approved", banReason: "" });
+    } else if (act === "conf-approve") {
+      await updateDoc(doc(db, "confessions", roll), { status: "approved", rejectionReason: "" });
+    } else if (act === "conf-reject") {
+      const reason = prompt("Why is this confession being rejected?");
+      if (reason === null) return;
+      await updateDoc(doc(db, "confessions", roll), { status: "rejected", rejectionReason: reason || "Did not meet guidelines." });
+    }
+  });
+
+  /* ══════════ CONFESSIONS ══════════ */
+  function startConfessionsListener() {
+    const q = query(collection(db, "confessions"), orderBy("timestamp", "desc"), limit(200));
+    onSnapshot(q, (snap) => {
+      const pending = [], history = [];
+      snap.forEach(d => {
+        const c = { id: d.id, ...d.data() };
+        if (c.status === "pending") pending.push(c);
+        else history.push(c);
+      });
+
+      document.getElementById("statConfPending").innerText = pending.length;
+
+      const pBody = document.getElementById("confPendingTableBody");
+      pBody.innerHTML = pending.length ? "" : `<tr class="empty-row"><td colspan="4">No confessions waiting for review.</td></tr>`;
+      pending.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="text-cell">${escapeHTML(c.text)}</td>
+          <td>${escapeHTML(c.name||"Unknown")} (${escapeHTML(c.rollNumber||"—")})</td>
+          <td>${fmtTime(c.timestamp)}</td>
+          <td>
+            <button class="btn-sm btn-approve" data-roll="${c.id}" data-act="conf-approve">Approve</button>
+            <button class="btn-sm btn-reject" data-roll="${c.id}" data-act="conf-reject">Reject</button>
+          </td>`;
+        pBody.appendChild(tr);
+      });
+
+      const hBody = document.getElementById("confHistoryTableBody");
+      hBody.innerHTML = history.length ? "" : `<tr class="empty-row"><td colspan="4">Nothing moderated yet.</td></tr>`;
+      history.slice(0, 30).forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="text-cell">${escapeHTML(c.text)}</td>
+          <td><span class="pill ${c.status}">${c.status}</span></td>
+          <td class="text-cell">${escapeHTML(c.rejectionReason||"—")}</td>
+          <td>${fmtTime(c.timestamp)}</td>`;
+        hBody.appendChild(tr);
+      });
+    });
+  }
+
+  /* ══════════ VISITORS ══════════ */
+  function startVisitorsListener() {
+    const q = query(collection(db, "visitor_logs"), orderBy("timestamp", "desc"), limit(100));
+    onSnapshot(q, (snap) => {
+      document.getElementById("statVisitors").innerText = snap.size;
+      const body = document.getElementById("visitorsTableBody");
+      body.innerHTML = snap.empty ? `<tr class="empty-row"><td colspan="5">No visitors logged yet.</td></tr>` : "";
+      snap.forEach(d => {
+        const v = d.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHTML(v.name||"—")}</td>
+          <td>${escapeHTML(v.rollNumber||"—")}</td>
+          <td>${escapeHTML(v.device||"—")}</td>
+          <td>${escapeHTML(v.browser||"—")}</td>
+          <td>${fmtTime(v.timestamp || v.visitedAt)}</td>`;
+        body.appendChild(tr);
+      });
+    }, () => {
+      // fallback if 'timestamp' field name differs (visitedAt used elsewhere)
+      const q2 = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(100));
+      onSnapshot(q2, (snap) => {
+        document.getElementById("statVisitors").innerText = snap.size;
+        const body = document.getElementById("visitorsTableBody");
+        body.innerHTML = snap.empty ? `<tr class="empty-row"><td colspan="5">No visitors logged yet.</td></tr>` : "";
+        snap.forEach(d => {
+          const v = d.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${escapeHTML(v.name||"—")}</td>
+            <td>${escapeHTML(v.rollNumber||"—")}</td>
+            <td>${escapeHTML(v.device||"—")}</td>
+            <td>${escapeHTML(v.browser||"—")}</td>
+            <td>${fmtTime(v.visitedAt)}</td>`;
+          body.appendChild(tr);
+        });
+      });
+    });
+  }
+
+  /* ══════════ BROADCAST / CHAT FEED ══════════ */
+  window.sendBroadcast = async function() {
+    const input = document.getElementById("broadcastInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    await addDoc(collection(db, "group_chat"), {
+      user: "Welkin Admin", userId: "ADMIN", text, isAdmin: true, timestamp: serverTimestamp()
+    });
+  };
+
+  function startChatListener() {
+    const q = query(collection(db, "group_chat"), orderBy("timestamp", "desc"), limit(50));
+    onSnapshot(q, (snap) => {
+      const body = document.getElementById("chatFeedTableBody");
+      body.innerHTML = snap.empty ? `<tr class="empty-row"><td colspan="3">No messages yet.</td></tr>` : "";
+      snap.forEach(d => {
+        const m = d.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${m.isAdmin ? '<span class="pill approved">ADMIN</span>' : escapeHTML(m.userId||"—")}</td>
+          <td class="text-cell">${escapeHTML(m.text)}</td>
+          <td>${fmtTime(m.timestamp)}</td>`;
+        body.appendChild(tr);
+      });
+    });
+  }
+
+  document.getElementById("broadcastInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.sendBroadcast();
+  });
+
+  /* ══════════ FEEDBACK TICKETS ══════════ */
+  let currentTicketId = null;
+  let ticketReplyUnsub = null;
+
+  function startTicketsListener() {
+    const q = query(collection(db, "feedback"), orderBy("lastReplyAt", "desc"), limit(100));
+    onSnapshot(q, (snap) => {
+      let openCount = 0;
+      const body = document.getElementById("ticketsTableBody");
+      body.innerHTML = snap.empty ? `<tr class="empty-row"><td colspan="6">No tickets yet.</td></tr>` : "";
+      snap.forEach(d => {
+        const t = d.data();
+        if (t.status === "open") openCount++;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="text-cell">${escapeHTML(t.subject)}</td>
+          <td>${escapeHTML(t.type||"—")}</td>
+          <td>${escapeHTML(t.name)} (${escapeHTML(t.rollNumber)})</td>
+          <td><span class="pill ${t.status}">${t.status}</span></td>
+          <td>${fmtTime(t.lastReplyAt||t.createdAt)}</td>
+          <td><button class="btn-sm btn-view" data-ticket-id="${d.id}">Open</button></td>`;
+        body.appendChild(tr);
+      });
+      document.getElementById("statTickets").innerText = openCount;
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-ticket-id]");
+    if (btn) openTicketThread(btn.dataset.ticketId);
+  });
+
+  function openTicketThread(id) {
+    currentTicketId = id;
+    document.getElementById("ticketsListCard").style.display = "none";
+    document.getElementById("ticketThreadCard").classList.add("active");
+
+    if (ticketReplyUnsub) ticketReplyUnsub();
+    ticketReplyUnsub = onSnapshot(query(collection(db, "feedback", id, "replies"), orderBy("timestamp", "asc")), (snap) => {
+      const box = document.getElementById("threadMsgs");
+      box.innerHTML = "";
+      snap.forEach(d => {
+        const r = d.data();
+        const div = document.createElement("div");
+        div.className = "thread-msg " + (r.sender === "admin" ? "admin" : "user");
+        div.innerHTML = `<div class="sender">${r.sender === "admin" ? "YOU (ADMIN)" : "STUDENT"}</div>${escapeHTML(r.message)}`;
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    });
+  }
+
+  window.closeTicketThread = function() {
+    document.getElementById("ticketsListCard").style.display = "block";
+    document.getElementById("ticketThreadCard").classList.remove("active");
+    if (ticketReplyUnsub) { ticketReplyUnsub(); ticketReplyUnsub = null; }
+    currentTicketId = null;
+  };
+
+  window.sendTicketReply = async function() {
+    const input = document.getElementById("ticketReplyInput");
+    const text = input.value.trim();
+    if (!text || !currentTicketId) return;
+    input.value = "";
+    await addDoc(collection(db, "feedback", currentTicketId, "replies"), {
+      sender: "admin", message: text, timestamp: serverTimestamp()
+    });
+    await updateDoc(doc(db, "feedback", currentTicketId), { lastReplyAt: serverTimestamp() });
+  };
+
+  window.closeTicket = async function() {
+    if (!currentTicketId) return;
+    await updateDoc(doc(db, "feedback", currentTicketId), { status: "closed" });
+    window.closeTicketThread();
+  };
+
+  document.getElementById("ticketReplyInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.sendTicketReply();
+  });
+
+  /* ══════════ START ══════════ */
+  function startAllListeners() {
+    startUsersListener();
+    startConfessionsListener();
+    startVisitorsListener();
+    startChatListener();
+    startTicketsListener();
+  }
+</script>
+
+</body>
+</html>
